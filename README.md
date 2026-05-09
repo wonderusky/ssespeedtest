@@ -20,9 +20,7 @@ The test captures:
 
 ```text
 test.sh                 # Manual test runner
-test.sh          # Automated direct + Prisma test
-analyze.py               # Optional analysis/graphing script
-```
+test.sh          # Automated direct + Prisma test```
 
 Primary output files:
 
