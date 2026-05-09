@@ -1,14 +1,14 @@
 # SSE Speed Test
 
-CLI-based test for measuring the performance difference between Direct Internet and Prisma Access / GlobalProtect.
+CLI-based test for measuring the performance difference between Direct Internet and Prisma Access Access / GlobalProtect.
 
 Main script: test.sh
 
 ## Purpose
 
-Measure the performance delta introduced by Prisma Access using repeatable CLI tests instead of relying only on Speedtest.net or Fast.com.
+Measure the performance delta introduced by Prisma Access Access using repeatable CLI tests instead of relying only on Speedtest.net or Fast.com.
 
-Prisma Access is cloud-delivered, so public speed-test platforms can give misleading results due to server selection, routing, peering, VPN/proxy classification, cloud/SSE source IP treatment, server-side throttling or rate limits, and test-server load.
+Prisma Access Access is cloud-delivered, so public speed-test platforms can give misleading results due to server selection, routing, peering, VPN/proxy classification, cloud/SSE source IP treatment, server-side throttling or rate limits, and test-server load.
 
 ## What test.sh Does
 
@@ -17,7 +17,7 @@ The script automates the full workflow:
 1. Disconnects GlobalProtect
 2. Runs the Direct Internet test
 3. Reconnects GlobalProtect
-4. Runs the Prisma Access test
+4. Runs the Prisma Access Access test
 5. Logs both phases to CSV
 
 ## Metrics Captured
@@ -55,7 +55,7 @@ $5 = device label
 A 60-minute run takes approximately:
 
 60 minutes Direct Internet
-60 minutes Prisma Access
+60 minutes Prisma Access Access
 plus GlobalProtect disconnect/reconnect time
 
 ## Default Test Targets
@@ -71,9 +71,9 @@ zoom.us
 
 ## Latest Same-Device Result
 
-Same device, direct vs Prisma Access, 16 streams:
+Same device, direct vs Prisma Access Access, 16 streams:
 
-| Metric | Direct | Prisma |
+| Metric | Direct | Prisma Access |
 |---|---:|---:|
 | Avg single-stream throughput | ~106 Mbps | ~93 Mbps |
 | Avg 16-stream throughput | ~126 Mbps | ~119 Mbps |
@@ -83,5 +83,5 @@ Same device, direct vs Prisma Access, 16 streams:
 
 ## Summary
 
-In same-device testing, Prisma Access showed a modest aggregate throughput reduction versus direct internet access. Packet loss remained 0% and latency was broadly comparable. Salesforce TTFB was higher through Prisma Access.
+In same-device testing, Prisma Access Access showed a modest aggregate throughput reduction versus direct internet access. Packet loss remained 0% and latency was broadly comparable. Salesforce TTFB was higher through Prisma Access Access.
 
