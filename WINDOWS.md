@@ -1,8 +1,8 @@
-# SSE Speed Test
+# SSE Speed Test for Windows
 
 SSE Speed Test compares Direct Internet performance with Prisma Access / GlobalProtect performance using repeatable HTTPS download, SaaS TTFB, latency, and packet-loss samples.
 
-The goal is a same-device path comparison. It is not a Prisma Access capacity benchmark.
+The Windows script runs both phases automatically: GlobalProtect disconnect, Direct Internet phase, GlobalProtect reconnect, Prisma Access phase, and CSV output.
 
 ## What It Measures
 
@@ -12,7 +12,7 @@ The goal is a same-device path comparison. It is not a Prisma Access capacity be
 - Salesforce time to first byte
 - Zoom latency
 - Packet loss
-- GlobalProtect status on Windows
+- GlobalProtect status
 
 Default targets:
 
@@ -22,115 +22,86 @@ SaaS TTFB: https://login.salesforce.com
 Latency: zoom.us
 ```
 
-Avoid `https://speed.cloudflare.com/__down?bytes=104857600` unless you validate it first. It returned HTTP 403 during prior testing and produced invalid 0 Mbps results.
-
 ## Download
 
 Clone the repository:
 
-```sh
+```powershell
 git clone https://github.com/wonderusky/ssespeedtest.git SSEspeedtest
 cd SSEspeedtest
 ```
 
-Or download the repository as a ZIP file, extract it, and open a terminal in the extracted `SSEspeedtest` folder.
+Or download the repository as a ZIP file, extract it, and open PowerShell in the extracted `SSEspeedtest` folder.
 
 If you already have the repository locally:
 
-```sh
-cd ~/Code/SSEspeedtest
+```powershell
+cd $HOME\Code\SSEspeedtest
 git pull
 ```
 
 ## Requirements
 
-macOS / Linux:
-
-- `zsh`
-- `curl`
-- `ping`
-- `awk`
-- `python3`
-
-Windows:
-
 - PowerShell 5 or newer
 - `curl.exe`
 - GlobalProtect client, if you want automated disconnect/reconnect
-
-Analysis:
-
-- Python 3.10 or newer
-- No third-party Python packages
+- Python 3.10 or newer for result analysis
 
 ## Recommended Workflow
 
 Use the same device, network, location, stream count, and download target for both phases.
 
-1. Run a short validation test.
-2. Confirm the CSV files contain non-zero `Single_Mbps` and `Multi_Mbps` values.
-3. Run the Direct Internet phase with GlobalProtect disabled.
-4. Run the Prisma Access phase with GlobalProtect enabled.
+1. Allow script execution for the current PowerShell session.
+2. Run a short validation test.
+3. Confirm both CSV files contain non-zero `Single_Mbps` and `Multi_Mbps` values.
+4. Run the full test.
 5. Analyze both CSVs together.
 
-A 60-minute comparison means 60 minutes on Direct Internet plus 60 minutes on Prisma Access. On Windows, add time for GlobalProtect disconnect and reconnect.
+A 60-minute comparison takes about 2 hours plus GlobalProtect disconnect and reconnect time.
 
 ## Run on Windows
 
-Use the Windows runbook: [WINDOWS.md](WINDOWS.md).
+Allow script execution for the current session:
 
-The Windows script runs both phases automatically: GlobalProtect disconnect, Direct Internet phase, GlobalProtect reconnect, Prisma Access phase, and CSV output.
-
-## Run on macOS / Linux
-
-The macOS / Linux script is a sampler. It does not disconnect or reconnect GlobalProtect for you. Run it once with GlobalProtect disconnected, stop it with `Ctrl+C`, then connect GlobalProtect and run it again.
-
-Make the scripts executable:
-
-```sh
-chmod +x test.sh analyze_results.py
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
-Run the Direct Internet phase:
+Run a short validation test:
 
-```sh
-./test.sh 120 300 16 mbp direct mbp_direct_16_streams_60min.csv
+```powershell
+.\test.ps1 -DurationMinutes 5 -BaselineMbps 300 -Streams 16 -Portal pangp.gpcloudservice.com -DeviceLabel windows-test
 ```
 
-Connect GlobalProtect, then run the Prisma Access phase:
+Run the full test:
 
-```sh
-./test.sh 120 300 16 mbp prisma mbp_prisma_16_streams_60min.csv
+```powershell
+.\test.ps1 -DurationMinutes 60 -BaselineMbps 300 -Streams 16 -Portal pangp.gpcloudservice.com -DeviceLabel windows-test
 ```
 
 Optional explicit download URL:
 
-```sh
-./test.sh 120 300 16 mbp prisma mbp_prisma_16_streams_60min.csv "https://ash-speed.hetzner.com/100MB.bin" 300
+```powershell
+.\test.ps1 -DurationMinutes 60 -BaselineMbps 300 -Streams 16 -Portal pangp.gpcloudservice.com -DeviceLabel windows-test -DownloadUrl "https://ash-speed.hetzner.com/100MB.bin" -CurlMaxTime 300
 ```
 
-Arguments:
+Output files:
 
 ```text
-$1 = sample interval seconds
-$2 = baseline Mbps
-$3 = number of parallel streams
-$4 = device label
-$5 = path label, such as direct or prisma
-$6 = output CSV file
-$7 = optional download URL
-$8 = optional curl timeout seconds
+<device>_direct_<streams>_streams_<duration>min.csv
+<device>_prisma_access_<streams>_streams_<duration>min.csv
+```
+
+Example:
+
+```text
+windows-test_direct_16_streams_60min.csv
+windows-test_prisma_access_16_streams_60min.csv
 ```
 
 ## Analyze Results
 
-Compare two CSV files:
-
-```sh
-python3 analyze_results.py mbp_direct_16_streams_60min.csv mbp_prisma_16_streams_60min.csv
-```
-
-On Windows:
+Compare the two output CSV files:
 
 ```powershell
 python .\analyze_results.py .\windows-test_direct_16_streams_60min.csv .\windows-test_prisma_access_16_streams_60min.csv
@@ -143,31 +114,13 @@ The analyzer prints:
 - Median throughput, TTFB, latency, and packet-loss comparison
 - Detail table with average, minimum, and maximum values
 
-Median is used for headline values because it reflects typical performance and reduces the impact of isolated spikes. The detail table includes averages and min/max values for additional context.
-
-## Sample Data
-
-This repository includes sample CSVs from a prior same-device run and the generated analyzer output.
-
-```text
-mbp_direct_16_streams_60min.csv
-mbp_prisma_16_streams_60min.csv
-SAMPLE_ANALYSIS.md
-```
-
-Regenerate the sample analysis with:
-
-```sh
-python3 analyze_results.py mbp_direct_16_streams_60min.csv mbp_prisma_16_streams_60min.csv > SAMPLE_ANALYSIS.md
-```
-
 ## CSV Fields
 
 Common fields:
 
 - `Timestamp`: sample time
 - `Device_Label`: device label provided at runtime
-- `Path_Label`: `direct`, `prisma`, or another path label
+- `Path_Label`: `direct` or `prisma_access`
 - `Egress_IP`: public source IP
 - `Download_URL`: HTTPS file used for download testing
 - `Streams_Requested`: number of parallel streams
@@ -185,9 +138,6 @@ Common fields:
 - `Ping_Target`: latency target
 - `Latency_Avg_ms`: average latency
 - `Packet_Loss_%`: packet loss percentage
-
-Windows also includes:
-
 - `GP_Status`: GlobalProtect status at sample time
 
 ## Interpreting Results
@@ -199,3 +149,21 @@ Windows also includes:
 `SaaS_TTFB_sec` is not a full page-load metric. For example, `0.250000` means 250 ms to receive the first byte from Salesforce.
 
 `Packet_Loss_%` uses ICMP ping to `zoom.us`. Some networks treat ICMP differently from application traffic, so use it as a signal rather than a complete voice/video quality test.
+
+`GP_Status` is written to the Windows CSV so you can confirm the observed GlobalProtect state at sample time. If GlobalProtect reconnect requires interactive login, complete the login prompt before relying on the Prisma Access phase.
+
+## Sample Data
+
+This repository includes sample CSVs from a prior same-device run and the generated analyzer output.
+
+```text
+mbp_direct_16_streams_60min.csv
+mbp_prisma_16_streams_60min.csv
+SAMPLE_ANALYSIS.md
+```
+
+Regenerate the sample analysis with:
+
+```powershell
+python .\analyze_results.py .\mbp_direct_16_streams_60min.csv .\mbp_prisma_16_streams_60min.csv > SAMPLE_ANALYSIS.md
+```
