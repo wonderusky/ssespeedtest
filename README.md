@@ -20,7 +20,7 @@ The test captures:
 
 ```text
 test.sh                 # Manual test runner
-gp_perf_auto.sh          # Automated direct + Prisma test
+test.sh          # Automated direct + Prisma test
 analyze.py               # Optional analysis/graphing script
 ```
 
@@ -38,13 +38,13 @@ Use the same MacBook Pro for both phases.
 Run a short validation first:
 
 ```zsh
-./gp_perf_auto.sh 5 300 16 pangp.gpcloudservice.com mbp
+./test.sh 5 300 16 pangp.gpcloudservice.com mbp
 ```
 
 Run the full test:
 
 ```zsh
-./gp_perf_auto.sh 60 300 16 pangp.gpcloudservice.com mbp
+./test.sh 60 300 16 pangp.gpcloudservice.com mbp
 ```
 
 This runs:
