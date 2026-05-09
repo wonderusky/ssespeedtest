@@ -1,24 +1,35 @@
 # SSE Speed Test
 
-CLI-based test for measuring the performance difference between Direct Internet and Prisma Access Access / GlobalProtect.
+SSE Speed Test compares Direct Internet performance against Prisma Access / GlobalProtect performance.
 
-Main script: test.sh
+It is built for repeatable CLI-based testing instead of relying only on Speedtest.net or Fast.com.
 
-## Purpose
+## Why This Exists
 
-Measure the performance delta introduced by Prisma Access Access using repeatable CLI tests instead of relying only on Speedtest.net or Fast.com.
+Prisma Access is cloud-delivered. Public speed-test platforms can produce misleading results because traffic may be affected by:
 
-Prisma Access Access is cloud-delivered, so public speed-test platforms can give misleading results due to server selection, routing, peering, VPN/proxy classification, cloud/SSE source IP treatment, server-side throttling or rate limits, and test-server load.
+- Speed-test server selection
+- Routing and peering differences
+- VPN or proxy classification
+- Cloud or SSE source IP handling
+- Server-side rate limits or throttling
+- Single-stream vs multi-stream test behavior
+- Test-server load
 
-## What test.sh Does
+This tool uses fixed HTTPS download targets and logs the results to CSV.
 
-The script automates the full workflow:
+## Scripts
 
-1. Disconnects GlobalProtect
-2. Runs the Direct Internet test
-3. Reconnects GlobalProtect
-4. Runs the Prisma Access Access test
-5. Logs both phases to CSV
+- test.sh: macOS / Linux
+- test.ps1: Windows PowerShell
+
+Both scripts automate the same workflow:
+
+1. Disconnect GlobalProtect
+2. Run the Direct Internet test
+3. Reconnect GlobalProtect
+4. Run the Prisma Access test
+5. Save both phases to CSV files
 
 ## Metrics Captured
 
@@ -30,48 +41,146 @@ The script automates the full workflow:
 - Packet loss
 - GlobalProtect status
 
-## Sample CSV Files
-
-The CSV files in this repo are sample outputs from prior test runs:
-
-- mbp_direct_16_streams_60min.csv
-- mbp_prisma_16_streams_60min.csv
-
-## Run Example
-
-chmod +x test.sh
-./test.sh 60 300 16 pangp.gpcloudservice.com test-device
-
-## Arguments
-
-$1 = test duration in minutes per phase
-$2 = baseline Mbps
-$3 = number of parallel streams
-$4 = GlobalProtect portal
-$5 = device label
-
-## Runtime
-
-A 60-minute run takes approximately:
-
-60 minutes Direct Internet
-60 minutes Prisma Access Access
-plus GlobalProtect disconnect/reconnect time
-
 ## Default Test Targets
 
 Download target:
-https://ash-speed.hetzner.com/100MB.bin
+
+    https://ash-speed.hetzner.com/100MB.bin
 
 SaaS TTFB target:
-https://login.salesforce.com
+
+    https://login.salesforce.com
 
 Latency target:
-zoom.us
+
+    zoom.us
+
+Avoid this endpoint unless validated first:
+
+    https://speed.cloudflare.com/__down?bytes=104857600
+
+It returned HTTP 403 during testing and produced invalid 0 Mbps results.
+
+## Run on macOS / Linux
+
+Make the script executable:
+
+    chmod +x test.sh
+
+Run a 5-minute validation test:
+
+    ./test.sh 5 300 16 pangp.gpcloudservice.com test-device
+
+Run a full 60-minute test:
+
+    ./test.sh 60 300 16 pangp.gpcloudservice.com test-device
+
+Arguments:
+
+    $1 = test duration in minutes per phase
+    $2 = baseline Mbps
+    $3 = number of parallel streams
+    $4 = GlobalProtect portal
+    $5 = device label
+    $6 = optional download URL
+    $7 = optional curl timeout seconds
+
+Example with explicit download URL:
+
+    ./test.sh 60 300 16 pangp.gpcloudservice.com test-device "https://ash-speed.hetzner.com/100MB.bin" 300
+
+## Run on Windows PowerShell
+
+Open PowerShell and go to the repo folder:
+
+    cd $HOME\Code\SSEspeedtest
+
+Allow script execution for the current session:
+
+    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+Run a 5-minute validation test:
+
+    .\test.ps1 -DurationMinutes 5 -BaselineMbps 300 -Streams 16 -Portal pangp.gpcloudservice.com -DeviceLabel windows-test
+
+Run a full 60-minute test:
+
+    .\test.ps1 -DurationMinutes 60 -BaselineMbps 300 -Streams 16 -Portal pangp.gpcloudservice.com -DeviceLabel windows-test
+
+PowerShell parameters:
+
+    -DurationMinutes = test duration in minutes per phase
+    -BaselineMbps    = baseline Mbps
+    -Streams         = number of parallel streams
+    -Portal          = GlobalProtect portal
+    -DeviceLabel     = device label
+    -DownloadUrl     = optional download URL
+    -CurlMaxTime     = optional curl timeout seconds
+
+Example with explicit download URL:
+
+    .\test.ps1 -DurationMinutes 60 -BaselineMbps 300 -Streams 16 -Portal pangp.gpcloudservice.com -DeviceLabel windows-test -DownloadUrl "https://ash-speed.hetzner.com/100MB.bin" -CurlMaxTime 300
+
+## Runtime
+
+A 60-minute run means:
+
+    60 minutes Direct Internet
+    60 minutes Prisma Access
+    plus GlobalProtect disconnect/reconnect time
+
+Approximate total runtime is about 2 hours.
+
+A 5-minute validation run takes about 10 to 15 minutes.
+
+## Output Files
+
+The scripts create one CSV file per test phase.
+
+Example macOS / Linux output:
+
+    test-device_direct_16_streams_60min.csv
+    test-device_prisma_16_streams_60min.csv
+
+Example Windows output:
+
+    windows-test_direct_16_streams_60min.csv
+    windows-test_prisma_access_16_streams_60min.csv
+
+The CSV files included in this repository are sample outputs from prior test runs.
+
+## Key CSV Fields
+
+- Timestamp: time of sample
+- Device_Label: device label provided at runtime
+- Path_Label: Direct or Prisma Access path
+- Egress_IP: public source IP
+- Download_URL: HTTPS file used for download testing
+- Streams_Requested: number of parallel streams
+- Single_Mbps: single HTTPS stream throughput
+- Multi_Mbps: aggregate multi-stream throughput
+- SaaS_TTFB_sec: Salesforce time to first byte
+- Latency_Avg_ms: average latency to Zoom
+- Packet_Loss_%: packet loss percentage
+- GP_Status: GlobalProtect status at sample time
+
+## Interpreting Results
+
+Single_Mbps measures one HTTPS download stream.
+
+Multi_Mbps measures aggregate throughput across multiple HTTPS streams.
+
+SaaS_TTFB_sec measures Time To First Byte to Salesforce. For example:
+
+    0.250000 = 250 ms
+
+This is not a full page-load test. It measures how long it takes to receive the first byte from the SaaS endpoint.
+
+Packet_Loss_% is measured using ICMP ping to zoom.us.
 
 ## Latest Same-Device Result
 
-Same device, direct vs Prisma Access Access, 16 streams:
+Same device, Direct Internet vs Prisma Access, 16 streams:
 
 | Metric | Direct | Prisma Access |
 |---|---:|---:|
@@ -83,5 +192,8 @@ Same device, direct vs Prisma Access Access, 16 streams:
 
 ## Summary
 
-In same-device testing, Prisma Access Access showed a modest aggregate throughput reduction versus direct internet access. Packet loss remained 0% and latency was broadly comparable. Salesforce TTFB was higher through Prisma Access Access.
+In same-device testing, Prisma Access showed a modest aggregate throughput reduction versus Direct Internet. Packet loss remained 0% and latency was broadly comparable. Salesforce TTFB was higher through Prisma Access.
 
+Use the same device and same network when comparing Direct Internet and Prisma Access. This avoids skew from different Wi-Fi radios, hardware, OS behavior, background applications, or local network conditions.
+
+For formal testing, run the 5-minute validation first. Then run the full 60-minute test.
