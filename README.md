@@ -178,21 +178,30 @@ This is not a full page-load test. It measures how long it takes to receive the 
 
 Packet_Loss_% is measured using ICMP ping to zoom.us.
 
+Median is preferred for headline comparisons because it reflects typical performance and reduces the impact of isolated spikes. Average is still useful as supporting context, but it can be skewed by one-off outliers.
+
 ## Latest Same-Device Result
+
+Test environment:
+
+- Device: MacBook Pro M5
+- Internet service: 300 Mbps Astound cable connection
+- Wi-Fi: Google Nest Wifi router
+- Note: The Google Nest Wifi / local Wi-Fi path was likely the bottleneck during testing, so these results should be interpreted as path comparison data, not Prisma Access maximum throughput capacity.
 
 Same device, Direct Internet vs Prisma Access, 16 streams:
 
-| Metric | Direct | Prisma Access |
-|---|---:|---:|
-| Avg single-stream throughput | ~106 Mbps | ~93 Mbps |
-| Avg 16-stream throughput | ~126 Mbps | ~119 Mbps |
-| Avg Salesforce TTFB | ~194 ms | ~266 ms |
-| Avg Zoom latency | ~25 ms | ~26 ms |
-| Packet loss | 0% | 0% |
+| Metric | Direct Median | Prisma Access Median | Takeaway |
+|---|---:|---:|---|
+| Single-stream throughput | ~113 Mbps | ~83 Mbps | Prisma Access lower |
+| 16-stream throughput | ~129 Mbps | ~119 Mbps | Prisma Access modestly lower |
+| Salesforce TTFB | ~198 ms | ~216 ms | Prisma Access slightly higher |
+| Zoom latency | ~24 ms | ~24 ms | Comparable |
+| Packet loss | 0% | 0% | No loss observed |
 
 ## Summary
 
-In same-device testing, Prisma Access showed a modest aggregate throughput reduction versus Direct Internet. Packet loss remained 0% and latency was broadly comparable. Salesforce TTFB was higher through Prisma Access.
+In same-device testing, Prisma Access showed a modest aggregate throughput reduction versus Direct Internet. Packet loss remained 0% and latency was broadly comparable. Salesforce TTFB was slightly higher through Prisma Access based on median results.
 
 Use the same device and same network when comparing Direct Internet and Prisma Access. This avoids skew from different Wi-Fi radios, hardware, OS behavior, background applications, or local network conditions.
 
